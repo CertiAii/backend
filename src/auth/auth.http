@@ -1,0 +1,116 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@token = d85b2da771ad396b366b2fdaef456d9f627a3f938408ec94dc920ac486b6ad38
+
+### Health Check
+GET {{baseUrl}}
+
+###
+
+### 1. Register - Guest User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "guest@test.com",
+  "password": "password123",
+  "fullName": "Guest User",
+  "role": "GUEST"
+}
+
+###
+
+### 2. Register - Institution User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "institution@test.com",
+  "password": "password123",
+  "fullName": "John Doe",
+  "institutionName": "MIT University",
+  "role": "INSTITUTION"
+}
+
+###
+
+### 3. Register - Employer User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "employer@test.com",
+  "password": "password123",
+  "fullName": "Jane Smith",
+  "institutionName": "TechCorp Inc",
+  "role": "EMPLOYER"
+}
+
+###
+
+### 4. Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "guest@test.com",
+  "password": "password123"
+}
+
+###
+
+### 5. Verify Email
+POST {{baseUrl}}/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "d85b2da771ad396b366b2fdaef456d9f627a3f938408ec94dc920ac486b6ad38"
+}
+
+###
+
+### 6. Forgot Password
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "guest@test.com"
+}
+
+###
+
+### 7. Reset Password
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "reset-token-from-database",
+  "newPassword": "newpassword123"
+}
+
+###
+
+### 8. Get Profile (Protected Route)
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+
+###
+
+### Example: Login and Get Profile Flow
+# Step 1: Login (copy the accessToken from response)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "guest@test.com",
+  "password": "password123"
+}
+
+###
+
+# Step 2: Use the token from above response in the {{token}} variable
+# Then call Get Profile
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+###

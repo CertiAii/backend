@@ -8,12 +8,12 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +21,12 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
+    private mailService: MailService,
   ) {}
+
+  private generateCode(): string {
+    return Math.floor(10000 + Math.random() * 90000).toString();
+  }
 
   async register(dto: RegisterDto) {
     // Check if user exists
@@ -36,8 +41,9 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // Generate verification token
-    const verificationToken = randomBytes(32).toString('hex');
+    // Generate 5-digit verification code
+    const verificationCode = this.generateCode();
+    const verificationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Create user
     const user = await this.prisma.user.create({
@@ -47,17 +53,25 @@ export class AuthService {
         fullName: dto.fullName,
         institutionName: dto.institutionName,
         role: dto.role,
-        verificationToken,
+        verificationCode,
+        verificationCodeExpiry,
       },
     });
 
-    // TODO: Send verification email
-    // await this.mailService.sendVerificationEmail(user.email, verificationToken);
+    // Send verification email
+    try {
+      await this.mailService.sendVerificationEmail(
+        user.email,
+        verificationCode,
+      );
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+    }
 
     delete user.password;
     return {
       message:
-        'Registration successful. Please check your email to verify your account.',
+        'Registration successful. Please check your email for the verification code.',
       user,
     };
   }
@@ -89,20 +103,26 @@ export class AuthService {
     };
   }
 
-  async verifyEmail(token: string) {
+  async verifyEmail(code: string) {
     const user = await this.prisma.user.findFirst({
-      where: { verificationToken: token },
+      where: {
+        verificationCode: code,
+        verificationCodeExpiry: {
+          gt: new Date(),
+        },
+      },
     });
 
     if (!user) {
-      throw new BadRequestException('Invalid or expired verification token');
+      throw new BadRequestException('Invalid or expired verification code');
     }
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         isEmailVerified: true,
-        verificationToken: null,
+        verificationCode: null,
+        verificationCodeExpiry: null,
       },
     });
 
@@ -146,15 +166,15 @@ export class AuthService {
   async resetPassword(dto: ResetPasswordDto) {
     const user = await this.prisma.user.findFirst({
       where: {
-        resetToken: dto.token,
-        resetTokenExpiry: {
+        resetCode: dto.code,
+        resetCodeExpiry: {
           gt: new Date(),
         },
       },
     });
 
     if (!user) {
-      throw new BadRequestException('Invalid or expired reset token');
+      throw new BadRequestException('Invalid or expired reset code');
     }
 
     const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
@@ -163,8 +183,8 @@ export class AuthService {
       where: { id: user.id },
       data: {
         password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null,
+        resetCode: null,
+        resetCodeExpiry: null,
       },
     });
 
