@@ -3,6 +3,7 @@
 Base URL: `http://localhost:3000/api`
 
 ## 📝 Register
+
 **POST** `/auth/register`
 
 ```json
@@ -20,6 +21,7 @@ Base URL: `http://localhost:3000/api`
 ---
 
 ## 🔐 Login
+
 **POST** `/auth/login`
 
 ```json
@@ -30,6 +32,7 @@ Base URL: `http://localhost:3000/api`
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -48,6 +51,7 @@ Base URL: `http://localhost:3000/api`
 ---
 
 ## ✉️ Verify Email
+
 **POST** `/auth/verify-email`
 
 ```json
@@ -59,6 +63,7 @@ Base URL: `http://localhost:3000/api`
 ---
 
 ## 🔑 Forgot Password
+
 **POST** `/auth/forgot-password`
 
 ```json
@@ -70,6 +75,7 @@ Base URL: `http://localhost:3000/api`
 ---
 
 ## 🔄 Reset Password
+
 **POST** `/auth/reset-password`
 
 ```json
@@ -82,14 +88,17 @@ Base URL: `http://localhost:3000/api`
 ---
 
 ## 👤 Get Profile (Protected)
+
 **GET** `/auth/profile`
 
 **Headers:**
+
 ```
 Authorization: Bearer {accessToken}
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -118,6 +127,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ## 🚀 Testing with cURL
 
 ### Register
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -130,6 +140,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -140,6 +151,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### Get Profile (with token)
+
 ```bash
 curl -X GET http://localhost:3000/api/auth/profile \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -150,15 +162,20 @@ curl -X GET http://localhost:3000/api/auth/profile \
 ## ⚠️ Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "statusCode": 400,
-  "message": ["email must be an email", "password must be longer than or equal to 8 characters"],
+  "message": [
+    "email must be an email",
+    "password must be longer than or equal to 8 characters"
+  ],
   "error": "Bad Request"
 }
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "statusCode": 401,
@@ -168,6 +185,7 @@ curl -X GET http://localhost:3000/api/auth/profile \
 ```
 
 ### 409 Conflict
+
 ```json
 {
   "statusCode": 409,

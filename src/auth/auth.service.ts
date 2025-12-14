@@ -56,7 +56,8 @@ export class AuthService {
 
     delete user.password;
     return {
-      message: 'Registration successful. Please check your email to verify your account.',
+      message:
+        'Registration successful. Please check your email to verify your account.',
       user,
     };
   }
@@ -115,7 +116,10 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if email exists
-      return { message: 'If your email is registered, you will receive a password reset link.' };
+      return {
+        message:
+          'If your email is registered, you will receive a password reset link.',
+      };
     }
 
     // Generate reset token
@@ -133,7 +137,10 @@ export class AuthService {
     // TODO: Send reset email
     // await this.mailService.sendPasswordResetEmail(user.email, resetToken);
 
-    return { message: 'If your email is registered, you will receive a password reset link.' };
+    return {
+      message:
+        'If your email is registered, you will receive a password reset link.',
+    };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
