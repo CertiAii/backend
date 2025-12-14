@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  INSTITUTION
+  EMPLOYER
+  GUEST
+}
+
+enum VerificationStatus {
+  PENDING
+  PROCESSING
+  AUTHENTIC
+  SUSPICIOUS
+  FORGED
+}
+
+enum CertificateType {
+  WASSCE
+  JAMB
+  NECO
+  JUPEB
+  ICAN
+  OTHER
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String
+  fullName          String
+  institutionName   String?
+  role              UserRole  @default(GUEST)
+  isEmailVerified   Boolean   @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  verifications     Verification[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Verification {
+  id                String             @id @default(uuid())
+  userId            String
+  certificateType   CertificateType
+  fileName          String
+  fileUrl           String
+  fileSize          Int
+  fileMimeType      String
+  status            VerificationStatus @default(PENDING)
+  confidenceScore   Float?
+  analysisResult    Json?
+  errorMessage      String?
+  processingTime    Int?              // in milliseconds
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("verifications")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  resource  String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
