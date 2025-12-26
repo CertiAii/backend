@@ -64,8 +64,11 @@ export class AuthService {
         user.email,
         verificationCode,
       );
+      console.log(`✅ Verification email sent to ${user.email}`);
+      console.log(`🔑 Verification Code (DEV ONLY): ${verificationCode}`);
     } catch (error) {
-      console.error('Failed to send verification email:', error);
+      console.error('❌ Failed to send verification email:', error);
+      console.log(`🔑 Verification Code (DEV ONLY): ${verificationCode}`);
     }
 
     delete user.password;
@@ -138,28 +141,32 @@ export class AuthService {
       // Don't reveal if email exists
       return {
         message:
-          'If your email is registered, you will receive a password reset link.',
+          'If your email is registered, you will receive a password reset code.',
       };
     }
 
-    // Generate reset token
-    const resetToken = randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+    // Generate 5-digit reset code
+    const resetCode = this.generateCode();
+    const resetCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        resetToken,
-        resetTokenExpiry,
+        resetCode,
+        resetCodeExpiry,
       },
     });
 
-    // TODO: Send reset email
-    // await this.mailService.sendPasswordResetEmail(user.email, resetToken);
+    // Send reset email
+    try {
+      await this.mailService.sendPasswordResetEmail(user.email, resetCode);
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+    }
 
     return {
       message:
-        'If your email is registered, you will receive a password reset link.',
+        'If your email is registered, you will receive a password reset code.',
     };
   }
 

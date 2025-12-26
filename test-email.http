@@ -1,0 +1,47 @@
+### Test Resend Email Service
+
+# Make sure backend is running on http://localhost:3000
+
+# Test registration to trigger email
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "your-real-email@gmail.com",
+  "password": "Password123!",
+  "fullName": "Test User",
+  "role": "GUEST"
+}
+
+POST http://localhost:5000
+
+###
+
+### Test ML Service
+
+# Test ML service health check
+GET http://localhost:5000/
+
+###
+
+# Test ML service verify endpoint
+POST http://localhost:5000/verify
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="certificate_type"
+
+WASSCE
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="certificate.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/1766490893535-637199604.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+
+
+# After registration, check:
+# 1. Backend console for the verification code
+# 2. Your email inbox (and spam folder)
+# 3. Resend dashboard at https://resend.com/emails
