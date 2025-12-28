@@ -29,7 +29,7 @@ Content-Type: application/json
 ### Test ML Service
 
 # Test ML service health check
-
+GET https://mlcertificateverifier-production.up.railway.app
 
 ###
 
