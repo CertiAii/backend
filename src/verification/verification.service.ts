@@ -68,14 +68,12 @@ export class VerificationService {
       form.append('certificate_type', verification.certificateType);
 
       // Call ML service
-      const mlResponse = await axios.post(
-        'http://localhost:5000/verify',
-        form,
-        {
-          headers: form.getHeaders(),
-          timeout: 30000, // 30 seconds
-        },
-      );
+      const mlServiceUrl =
+        process.env.ML_SERVICE_URL || 'http://localhost:5000';
+      const mlResponse = await axios.post(`${mlServiceUrl}/verify`, form, {
+        headers: form.getHeaders(),
+        timeout: 30000, // 30 seconds
+      });
 
       const { confidence, authenticity, details } = mlResponse.data;
 

@@ -2,25 +2,34 @@
 
 # Make sure backend is running on http://localhost:3000
 
-# Test registration to trigger email
+### Register a new test user
 POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "your-real-email@gmail.com",
+  "email": "test@example.com",
   "password": "Password123!",
   "fullName": "Test User",
   "role": "GUEST"
 }
 
-POST http://localhost:5000
+###
+
+### Login with test user
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "tes@example.com",
+  "password": "Password123!"
+}
 
 ###
 
 ### Test ML Service
 
 # Test ML service health check
-GET http://localhost:5000/
+
 
 ###
 
