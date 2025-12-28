@@ -86,7 +86,12 @@ export class MailService {
           subject: 'Verify your email - CertiAI',
           html: this.verificationTemplate(code),
         });
-        console.log('✅ Email sent via Resend! ID:', result.data?.id);
+        // Log the full result for debugging
+        console.log('✅ Full Resend response:', result);
+        // Try to get the ID from possible locations
+        const emailId =
+          result?.data?.id || result?.id || result?.data || 'undefined';
+        console.log('✅ Email sent via Resend! ID:', emailId);
         return result;
       } else {
         // SMTP (nodemailer)
