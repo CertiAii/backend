@@ -24,8 +24,6 @@ export class MailService {
     }
     // Fallback to Gmail SMTP for local development
     else if (gmailUser && gmailAppPassword) {
-    // Fallback to Gmail SMTP for local development
-    else if (gmailUser && gmailAppPassword) {
       // Gmail SMTP configuration with port 587 (STARTTLS) - works locally
       this.transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
