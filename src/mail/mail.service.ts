@@ -13,21 +13,24 @@ export class MailService {
     const gmailAppPassword = this.config.get<string>('GMAIL_APP_PASSWORD');
 
     if (gmailUser && gmailAppPassword) {
-      // Gmail SMTP configuration with port 465 (SSL) for Railway compatibility
+      // Gmail SMTP configuration with port 587 (STARTTLS) - try alternative to 465
       this.transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // Use SSL
+        port: 587,
+        secure: false, // Use STARTTLS
         auth: {
           user: gmailUser,
           pass: gmailAppPassword,
         },
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 5000,
-        socketTimeout: 10000,
+        tls: {
+          rejectUnauthorized: false, // Allow self-signed certs (Railway compatibility)
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
       });
       this.fromEmail = gmailUser;
-      console.log('📧 Using Gmail SMTP (port 465) for email delivery');
+      console.log('📧 Using Gmail SMTP (port 587 STARTTLS) for email delivery');
     } else {
       // Fallback to Mailtrap for testing
       const mailtrapHost =
