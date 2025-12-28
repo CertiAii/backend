@@ -175,23 +175,22 @@ export class VerificationService {
    * Get dashboard statistics
    */
   async getDashboardStats(userId: string) {
-    const [total, authentic, suspicious, forged, recent] = await Promise.all([
-      this.prisma.verification.count({ where: { userId } }),
-      this.prisma.verification.count({
-        where: { userId, status: VerificationStatus.AUTHENTIC },
-      }),
-      this.prisma.verification.count({
-        where: { userId, status: VerificationStatus.SUSPICIOUS },
-      }),
-      this.prisma.verification.count({
-        where: { userId, status: VerificationStatus.FORGED },
-      }),
-      this.prisma.verification.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-    ]);
+    // Run queries sequentially to avoid exhausting DB connection pool
+    const total = await this.prisma.verification.count({ where: { userId } });
+    const authentic = await this.prisma.verification.count({
+      where: { userId, status: VerificationStatus.AUTHENTIC },
+    });
+    const suspicious = await this.prisma.verification.count({
+      where: { userId, status: VerificationStatus.SUSPICIOUS },
+    });
+    const forged = await this.prisma.verification.count({
+      where: { userId, status: VerificationStatus.FORGED },
+    });
+    const recent = await this.prisma.verification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
 
     return {
       totalVerified: total,

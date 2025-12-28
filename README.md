@@ -44,7 +44,7 @@ This is a NestJS-based REST API that provides:
 ### Email Service
 
 - **Production:** Gmail SMTP for real email delivery
-- **Development:** Mailtrap SMTP for testing
+- **Development:** Resend SMTP for testing
 - **Auto-detection:** Switches based on environment configuration
 - Templates for verification codes and password resets
 

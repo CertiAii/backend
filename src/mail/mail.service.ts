@@ -18,9 +18,12 @@ export class MailService {
     // Prioritize Resend (HTTP-based) for Railway deployment
     if (resendApiKey) {
       this.resend = new Resend(resendApiKey);
-      this.fromEmail = this.config.get<string>('RESEND_FROM_EMAIL') || 'onboarding@resend.dev';
+      this.fromEmail =
+        this.config.get<string>('RESEND_FROM_EMAIL') || 'onboarding@resend.dev';
       this.useResend = true;
-      console.log('📧 Using Resend (HTTP API) for email delivery - Railway compatible');
+      console.log(
+        '📧 Using Resend (HTTP API) for email delivery - Railway compatible',
+      );
     }
     // Fallback to Gmail SMTP for local development
     else if (gmailUser && gmailAppPassword) {
@@ -42,7 +45,9 @@ export class MailService {
       });
       this.fromEmail = gmailUser;
       this.useResend = false;
-      console.log('📧 Using Gmail SMTP (port 587) for email delivery - Local only');
+      console.log(
+        '📧 Using Gmail SMTP (port 587) for email delivery - Local only',
+      );
     } else {
       // Fallback to Mailtrap for testing
       const mailtrapHost =

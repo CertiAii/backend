@@ -15,10 +15,16 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // Enable CORS
+  // Enable CORS for Vercel frontend
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+      'https://certi-ai-sigma.vercel.app',
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+    ],
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
+    exposedHeaders: 'Authorization',
   });
 
   // Enable cookie parser
