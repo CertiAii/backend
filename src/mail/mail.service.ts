@@ -1,19 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
+  private resend: Resend;
   private fromEmail: string;
+  private useResend: boolean;
 
   constructor(private config: ConfigService) {
-    // Check if Gmail SMTP is configured, otherwise use Mailtrap
+    const resendApiKey = this.config.get<string>('RESEND_API_KEY');
     const gmailUser = this.config.get<string>('GMAIL_USER');
     const gmailAppPassword = this.config.get<string>('GMAIL_APP_PASSWORD');
 
-    if (gmailUser && gmailAppPassword) {
-      // Gmail SMTP configuration with port 587 (STARTTLS) - try alternative to 465
+    // Prioritize Resend (HTTP-based) for Railway deployment
+    if (resendApiKey) {
+      this.resend = new Resend(resendApiKey);
+      this.fromEmail = this.config.get<string>('RESEND_FROM_EMAIL') || 'onboarding@resend.dev';
+      this.useResend = true;
+      console.log('📧 Using Resend (HTTP API) for email delivery - Railway compatible');
+    }
+    // Fallback to Gmail SMTP for local development
+    else if (gmailUser && gmailAppPassword) {
+    // Fallback to Gmail SMTP for local development
+    else if (gmailUser && gmailAppPassword) {
+      // Gmail SMTP configuration with port 587 (STARTTLS) - works locally
       this.transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
@@ -23,14 +36,15 @@ export class MailService {
           pass: gmailAppPassword,
         },
         tls: {
-          rejectUnauthorized: false, // Allow self-signed certs (Railway compatibility)
+          rejectUnauthorized: false,
         },
         connectionTimeout: 15000,
         greetingTimeout: 10000,
         socketTimeout: 15000,
       });
       this.fromEmail = gmailUser;
-      console.log('📧 Using Gmail SMTP (port 587 STARTTLS) for email delivery');
+      this.useResend = false;
+      console.log('📧 Using Gmail SMTP (port 587) for email delivery - Local only');
     } else {
       // Fallback to Mailtrap for testing
       const mailtrapHost =
@@ -51,7 +65,8 @@ export class MailService {
       });
       this.fromEmail =
         this.config.get<string>('FROM_EMAIL') || 'hello@certiai.com';
-      console.log('📧 Using Mailtrap for email testing');
+      this.useResend = false;
+      console.log('📧 Using Mailtrap SMTP for email testing');
     }
   }
 
@@ -60,15 +75,27 @@ export class MailService {
       console.log('📧 Attempting to send verification email to:', email);
       console.log('📧 From:', this.fromEmail);
 
-      const result = await this.transporter.sendMail({
-        from: `"CertiAI" <${this.fromEmail}>`,
-        to: email,
-        subject: 'Verify your email - CertiAI',
-        html: this.verificationTemplate(code),
-      });
-
-      console.log('✅ Email sent successfully! Message ID:', result.messageId);
-      return result;
+      if (this.useResend) {
+        // Resend HTTP API (works on Railway)
+        const result = await this.resend.emails.send({
+          from: this.fromEmail,
+          to: email,
+          subject: 'Verify your email - CertiAI',
+          html: this.verificationTemplate(code),
+        });
+        console.log('✅ Email sent via Resend! ID:', result.data?.id);
+        return result;
+      } else {
+        // SMTP (nodemailer)
+        const result = await this.transporter.sendMail({
+          from: `"CertiAI" <${this.fromEmail}>`,
+          to: email,
+          subject: 'Verify your email - CertiAI',
+          html: this.verificationTemplate(code),
+        });
+        console.log('✅ Email sent via SMTP! Message ID:', result.messageId);
+        return result;
+      }
     } catch (error) {
       console.error('❌ Failed to send verification email:', error);
       throw error;
@@ -79,15 +106,27 @@ export class MailService {
     try {
       console.log('📧 Attempting to send password reset email to:', email);
 
-      const result = await this.transporter.sendMail({
-        from: `"CertiAI" <${this.fromEmail}>`,
-        to: email,
-        subject: 'Reset your password - CertiAI',
-        html: this.passwordResetTemplate(code),
-      });
-
-      console.log('✅ Password reset email sent successfully!');
-      return result;
+      if (this.useResend) {
+        // Resend HTTP API (works on Railway)
+        const result = await this.resend.emails.send({
+          from: this.fromEmail,
+          to: email,
+          subject: 'Reset your password - CertiAI',
+          html: this.passwordResetTemplate(code),
+        });
+        console.log('✅ Password reset email sent via Resend!');
+        return result;
+      } else {
+        // SMTP (nodemailer)
+        const result = await this.transporter.sendMail({
+          from: `"CertiAI" <${this.fromEmail}>`,
+          to: email,
+          subject: 'Reset your password - CertiAI',
+          html: this.passwordResetTemplate(code),
+        });
+        console.log('✅ Password reset email sent via SMTP!');
+        return result;
+      }
     } catch (error) {
       console.error('❌ Failed to send password reset email:', error);
       throw error;
