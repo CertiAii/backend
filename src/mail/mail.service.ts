@@ -1,44 +1,68 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MailtrapClient } from 'mailtrap';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private mailtrap: MailtrapClient;
+  private transporter: nodemailer.Transporter;
   private fromEmail: string;
 
   constructor(private config: ConfigService) {
-    this.mailtrap = new MailtrapClient({
-      token: this.config.get<string>('MAILTRAP_API_TOKEN'),
-    });
-    this.fromEmail =
-      this.config.get<string>('MAILTRAP_FROM_EMAIL') || 'hello@certiai.com';
+    // Check if Gmail SMTP is configured, otherwise use Mailtrap
+    const gmailUser = this.config.get<string>('GMAIL_USER');
+    const gmailAppPassword = this.config.get<string>('GMAIL_APP_PASSWORD');
+
+    if (gmailUser && gmailAppPassword) {
+      // Gmail SMTP configuration
+      this.transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: gmailUser,
+          pass: gmailAppPassword,
+        },
+      });
+      this.fromEmail = gmailUser;
+      console.log('📧 Using Gmail SMTP for email delivery');
+    } else {
+      // Fallback to Mailtrap for testing
+      const mailtrapHost =
+        this.config.get<string>('MAILTRAP_HOST') || 'smtp.mailtrap.io';
+      const mailtrapPort = parseInt(
+        this.config.get<string>('MAILTRAP_PORT') || '2525',
+      );
+      const mailtrapUser = this.config.get<string>('MAILTRAP_USER');
+      const mailtrapPass = this.config.get<string>('MAILTRAP_PASS');
+
+      this.transporter = nodemailer.createTransport({
+        host: mailtrapHost,
+        port: mailtrapPort,
+        auth: {
+          user: mailtrapUser,
+          pass: mailtrapPass,
+        },
+      });
+      this.fromEmail =
+        this.config.get<string>('FROM_EMAIL') || 'hello@certiai.com';
+      console.log('📧 Using Mailtrap for email testing');
+    }
   }
 
   async sendVerificationEmail(email: string, code: string) {
     try {
       console.log('📧 Attempting to send verification email to:', email);
       console.log('📧 From:', this.fromEmail);
-      console.log(
-        '📧 API Token configured:',
-        this.config.get<string>('MAILTRAP_API_TOKEN') ? 'Yes' : 'No',
-      );
 
-      const result = await this.mailtrap.send({
-        from: { email: this.fromEmail, name: 'CertiAI' },
-        to: [{ email }],
+      const result = await this.transporter.sendMail({
+        from: `"CertiAI" <${this.fromEmail}>`,
+        to: email,
         subject: 'Verify your email - CertiAI',
         html: this.verificationTemplate(code),
       });
 
-      console.log(
-        '✅ Email sent successfully! Result:',
-        JSON.stringify(result, null, 2),
-      );
+      console.log('✅ Email sent successfully! Message ID:', result.messageId);
       return result;
     } catch (error) {
       console.error('❌ Failed to send verification email:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   }
@@ -47,9 +71,9 @@ export class MailService {
     try {
       console.log('📧 Attempting to send password reset email to:', email);
 
-      const result = await this.mailtrap.send({
-        from: { email: this.fromEmail, name: 'CertiAI' },
-        to: [{ email }],
+      const result = await this.transporter.sendMail({
+        from: `"CertiAI" <${this.fromEmail}>`,
+        to: email,
         subject: 'Reset your password - CertiAI',
         html: this.passwordResetTemplate(code),
       });
