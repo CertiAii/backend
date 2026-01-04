@@ -16,11 +16,13 @@ async function bootstrap() {
   });
 
   // Enable CORS for Vercel frontend
+  // Support multiple comma-separated origins from .env and trim trailing slashes
+  const envOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/$/, ''));
+  const allowedOrigins = ['https://certi-ai-sigma.vercel.app', ...envOrigins];
   app.enableCors({
-    origin: [
-      'https://certi-ai-sigma.vercel.app',
-      process.env.FRONTEND_URL || 'http://localhost:5173',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',

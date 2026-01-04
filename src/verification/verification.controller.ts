@@ -24,9 +24,6 @@ import { CertificateType } from '@prisma/client';
 export class VerificationController {
   constructor(private verificationService: VerificationService) {}
 
-  /**
-   * Upload certificate for verification
-   */
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {

@@ -88,9 +88,14 @@ export class MailService {
         });
         // Log the full result for debugging
         console.log('✅ Full Resend response:', result);
-        // Try to get the ID from possible locations
+        // Get the email ID if available
         const emailId =
-          result?.data?.id || result?.id || result?.data || 'undefined';
+          result &&
+          result.data &&
+          typeof result.data === 'object' &&
+          'id' in result.data
+            ? result.data.id
+            : undefined;
         console.log('✅ Email sent via Resend! ID:', emailId);
         return result;
       } else {

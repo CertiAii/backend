@@ -24,10 +24,16 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
+  /**
+   * Generates a random 5-digit code for verification or password reset.
+   */
   private generateCode(): string {
     return Math.floor(10000 + Math.random() * 90000).toString();
   }
 
+  /**
+   * Registers a new user, hashes password, creates verification code, and sends verification email.
+   */
   async register(dto: RegisterDto) {
     // Check if user exists
     const existingUser = await this.prisma.user.findUnique({
@@ -79,6 +85,9 @@ export class AuthService {
     };
   }
 
+  /**
+   * Authenticates a user by email and password, returns user and JWT tokens.
+   */
   async login(dto: LoginDto) {
     // Find user
     const user = await this.prisma.user.findUnique({
@@ -106,6 +115,9 @@ export class AuthService {
     };
   }
 
+  /**
+   * Verifies user's email using the provided code, marks email as verified if valid.
+   */
   async verifyEmail(code: string) {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -132,6 +144,9 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  /**
+   * Initiates password reset by generating a reset code and sending it to user's email.
+   */
   async forgotPassword(dto: ForgotPasswordDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -170,6 +185,9 @@ export class AuthService {
     };
   }
 
+  /**
+   * Resets user's password using a valid reset code and new password.
+   */
   async resetPassword(dto: ResetPasswordDto) {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -198,6 +216,9 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 
+  /**
+   * Retrieves user profile by user ID, excluding password.
+   */
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -211,6 +232,9 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * Generates JWT access token for authenticated user.
+   */
   private async generateTokens(userId: string, email: string) {
     const payload = { sub: userId, email };
 
