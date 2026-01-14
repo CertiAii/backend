@@ -11,20 +11,23 @@ export class MailService {
   private useResend: boolean;
 
   constructor(private config: ConfigService) {
-    const resendApiKey = this.config.get<string>('RESEND_API_KEY');
-    const gmailUser = this.config.get<string>('GMAIL_USER');
-    const gmailAppPassword = this.config.get<string>('GMAIL_APP_PASSWORD');
+    const resendApiKey = this.config.get<string>('RESEND_API_KEY')?.trim();
+    const gmailUser = this.config.get<string>('GMAIL_USER')?.trim();
+    const gmailAppPassword = this.config
+      .get<string>('GMAIL_APP_PASSWORD')
+      ?.trim();
 
     // Prioritize Resend (HTTP-based) for Railway deployment
     if (resendApiKey) {
       this.resend = new Resend(resendApiKey);
       this.fromEmail =
-        this.config.get<string>('RESEND_FROM_EMAIL') ||
+        this.config.get<string>('RESEND_FROM_EMAIL')?.trim() ||
         'no-reply@ai.nnshealthcare.co.uk';
       this.useResend = true;
       console.log(
         '📧 Using Resend (HTTP API) for email delivery - Railway compatible',
       );
+      console.log('📧 Resend FROM address:', this.fromEmail);
     }
     // Fallback to Gmail SMTP for local development
     else if (gmailUser && gmailAppPassword) {
@@ -68,9 +71,10 @@ export class MailService {
         },
       });
       this.fromEmail =
-        this.config.get<string>('FROM_EMAIL') || 'hello@certiai.com';
+        this.config.get<string>('FROM_EMAIL')?.trim() || 'hello@certiai.com';
       this.useResend = false;
       console.log('📧 Using Mailtrap SMTP for email testing');
+      console.log('📧 SMTP FROM address:', this.fromEmail);
     }
   }
 
@@ -82,21 +86,15 @@ export class MailService {
       if (this.useResend) {
         // Resend HTTP API (works on Railway)
         const result = await this.resend.emails.send({
-          from: this.fromEmail,
+          from: `"CertiAI" <${this.fromEmail}>`,
           to: email,
           subject: 'Verify your email - CertiAI',
           html: this.verificationTemplate(code),
         });
         // Log the full result for debugging
         console.log('✅ Full Resend response:', result);
-        // Get the email ID if available
-        const emailId =
-          result &&
-          result.data &&
-          typeof result.data === 'object' &&
-          'id' in result.data
-            ? result.data.id
-            : undefined;
+        // Get the email ID if available (Resend SDK response types vary across versions)
+        const emailId = (result as any)?.data?.id;
         console.log('✅ Email sent via Resend! ID:', emailId);
         return result;
       } else {
@@ -123,7 +121,7 @@ export class MailService {
       if (this.useResend) {
         // Resend HTTP API (works on Railway)
         const result = await this.resend.emails.send({
-          from: this.fromEmail,
+          from: `"CertiAI" <${this.fromEmail}>`,
           to: email,
           subject: 'Reset your password - CertiAI',
           html: this.passwordResetTemplate(code),
