@@ -19,7 +19,8 @@ export class MailService {
     if (resendApiKey) {
       this.resend = new Resend(resendApiKey);
       this.fromEmail =
-        this.config.get<string>('RESEND_FROM_EMAIL') || 'onboarding@resend.dev';
+        this.config.get<string>('RESEND_FROM_EMAIL') ||
+        'no-reply@ai.nnshealthcare.co.uk';
       this.useResend = true;
       console.log(
         '📧 Using Resend (HTTP API) for email delivery - Railway compatible',
